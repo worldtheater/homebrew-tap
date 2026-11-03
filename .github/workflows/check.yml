@@ -35,4 +35,6 @@ jobs:
           brew install --cask --require-sha --appdir="$RUNNER_TEMP/Applications" worldtheater/tap/patchlook
           brew audit --cask --online worldtheater/tap/patchlook
           codesign --verify --deep --strict "$RUNNER_TEMP/Applications/Patchlook.app"
-          spctl --assess --type execute "$RUNNER_TEMP/Applications/Patchlook.app"
+          codesign --display --verbose=4 "$RUNNER_TEMP/Applications/Patchlook.app"
+          xcrun stapler validate "$RUNNER_TEMP/Applications/Patchlook.app"
+          spctl --assess --type execute --verbose=4 "$RUNNER_TEMP/Applications/Patchlook.app"
