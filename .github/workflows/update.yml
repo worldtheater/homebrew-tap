@@ -1,0 +1,59 @@
+name: Update Patchlook
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-patchlook
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 -m unittest discover -s scripts
+      - name: Check latest published release
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/update.py
+          if ! git diff --quiet -- Casks/patchlook.rb; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Validate updated cask before publishing
+        if: steps.release.outputs.changed == 'true'
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/worldtheater/homebrew-tap"
+          mkdir -p "$(dirname "$tap_dir")"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          brew style Casks/patchlook.rb
+          brew install --cask --require-sha --appdir="$RUNNER_TEMP/Applications" worldtheater/tap/patchlook
+          brew audit --cask --online worldtheater/tap/patchlook
+          codesign --verify --deep --strict "$RUNNER_TEMP/Applications/Patchlook.app"
+          spctl --assess --type execute "$RUNNER_TEMP/Applications/Patchlook.app"
+      - name: Commit version update
+        if: steps.release.outputs.changed == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Casks/patchlook.rb
+          git commit -m 'chore: update Patchlook cask'
+          git push origin HEAD:main

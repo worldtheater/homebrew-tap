@@ -1,0 +1,38 @@
+name: Check cask
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 -m unittest discover -s scripts
+      - name: Register checkout as a local tap
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/worldtheater/homebrew-tap"
+          mkdir -p "$(dirname "$tap_dir")"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+      - run: brew style Casks/patchlook.rb
+      - name: Install and audit
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
+        run: |
+          brew install --cask --require-sha --appdir="$RUNNER_TEMP/Applications" worldtheater/tap/patchlook
+          brew audit --cask --online worldtheater/tap/patchlook
+          codesign --verify --deep --strict "$RUNNER_TEMP/Applications/Patchlook.app"
+          spctl --assess --type execute "$RUNNER_TEMP/Applications/Patchlook.app"
