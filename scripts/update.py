@@ -1,4 +1,4 @@
-"""Update the cask from a published release, checking the downloaded DMG hash."""
+"""Update the cask from a published release, checking the downloaded ZIP hash."""
 
 import hashlib
 import json
@@ -37,7 +37,7 @@ def updated_cask(text, release, hash_download=download_sha256):
     version = match[1]
     if tuple(map(int, version.split("."))) < tuple(map(int, current[1].split("."))):
         raise ValueError("Refusing to downgrade the cask")
-    asset_name = f"patchlook-{version}-darwin-arm64.dmg"
+    asset_name = f"patchlook-{version}-darwin-arm64.zip"
     assets = [asset for asset in release["assets"] if asset["name"] == asset_name]
     if len(assets) != 1:
         raise ValueError(f"Expected exactly one {asset_name} asset")
@@ -54,7 +54,7 @@ def updated_cask(text, release, hash_download=download_sha256):
             raise ValueError("Existing release checksum changed; review it manually")
         return text
     if hash_download(url) != sha256:
-        raise ValueError("Downloaded DMG does not match the release SHA-256")
+        raise ValueError("Downloaded ZIP does not match the release SHA-256")
     text = VERSION.sub(f'  version "{version}"', text, count=1)
     return SHA256.sub(f'  sha256 "{sha256}"', text, count=1)
 

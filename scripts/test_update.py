@@ -16,8 +16,8 @@ class UpdateTests(unittest.TestCase):
             "prerelease": False,
             "published_at": "2026-11-03T00:00:00Z",
             "assets": [{
-                "name": "patchlook-0.1.7-darwin-arm64.dmg",
-                "browser_download_url": f"https://github.com/{UPSTREAM}/releases/download/v0.1.7/patchlook-0.1.7-darwin-arm64.dmg",
+                "name": "patchlook-0.1.7-darwin-arm64.zip",
+                "browser_download_url": f"https://github.com/{UPSTREAM}/releases/download/v0.1.7/patchlook-0.1.7-darwin-arm64.zip",
                 "digest": f"sha256:{self.new_hash}",
             }],
         }
@@ -50,7 +50,7 @@ class UpdateTests(unittest.TestCase):
         self.download.assert_not_called()
 
     def test_invalid_asset_url_or_digest_is_rejected(self):
-        for changes in ({"browser_download_url": "https://example.com/app.dmg"}, {"digest": None}):
+        for changes in ({"browser_download_url": "https://example.com/app.zip"}, {"digest": None}):
             release = copy.deepcopy(self.release)
             release["assets"][0].update(changes)
             with self.subTest(changes=changes), self.assertRaises(ValueError):
