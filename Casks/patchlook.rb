@@ -1,6 +1,6 @@
 cask "patchlook" do
-  version "0.1.7"
-  sha256 "990b7bf56b7c44f6bd7e43906c0f162a499213e2830e4d9577e0ef699f4d5499"
+  version "0.1.8"
+  sha256 "5ac6b41b00fd0bdf74e5a05b99788b262cd4f5acc46548cd24da105e64cd0b35"
 
   url "https://github.com/worldtheater/patchlook/releases/download/v#{version}/patchlook-#{version}-darwin-arm64.zip"
   name "Patchlook"
